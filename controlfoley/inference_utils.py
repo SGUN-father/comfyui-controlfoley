@@ -53,6 +53,7 @@ def generate(
     clip_batch_size_multiplier: int = 40,
     sync_batch_size_multiplier: int = 40,
     image_input: bool = False,
+    low_vram: bool = False,
 ) -> torch.Tensor:
     device = feature_utils.device
     dtype = feature_utils.dtype
@@ -136,10 +137,24 @@ def generate(
     empty_conditions = net.get_empty_conditions(
         bs, negative_text_features=negative_text_features if negative_text is not None else None)
 
+    # Low VRAM mode: offload feature_utils (CLIP/CLAP/CAV-MAE/Synchformer/MusicGen) to CPU
+    # before the ODE solver starts. The solver only uses `net` (the diffusion model).
+    # This frees ~10GB VRAM for the peak ODE step memory.
+    if low_vram:
+        log.info("ControlFoley: low_vram mode — offloading encoder models to CPU for ODE solve")
+        feature_utils = feature_utils.cpu()
+        torch.cuda.empty_cache()
+
     cfg_ode_wrapper = lambda t, x: net.ode_wrapper(t, x, preprocessed_conditions, empty_conditions,
                                                    cfg_strength)
     x1 = fm.to_data(cfg_ode_wrapper, x0)
     x1 = net.unnormalize(x1)
+
+    # Bring feature_utils back to GPU for decoding / vocoding
+    if low_vram:
+        feature_utils = feature_utils.to(device, dtype)
+        torch.cuda.empty_cache()
+
     spec = feature_utils.decode(x1)
     audio = feature_utils.vocode(spec)
     return audio

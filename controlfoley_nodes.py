@@ -371,6 +371,11 @@ class ControlFoleyGenerate:
                 "variant": (["large_44k"], {
                     "default": "large_44k",
                 }),
+                "low_vram": ("BOOLEAN", {
+                    "default": False,
+                    "label_on": "ON (slower)",
+                    "label_off": "OFF (peak VRAM)",
+                }),
             },
             "optional": {
                 "video": ("IMAGE",),
@@ -394,6 +399,7 @@ class ControlFoleyGenerate:
         steps: int,
         seed: int,
         variant: str,
+        low_vram: bool,
         video: Optional[torch.Tensor] = None,
         reference_audio: Optional[dict] = None,
     ):
@@ -491,6 +497,7 @@ class ControlFoleyGenerate:
             fm=fm,
             rng=rng,
             cfg_strength=cfg_strength,
+            low_vram=low_vram,
         )
 
         audio = audios.float().cpu()[0]
@@ -618,10 +625,15 @@ class ControlFoleyImageToAudio:
                     "default": "",
                 }),
                 "duration": ("FLOAT", {
-                    "default": 8.0,
+                    "default": 4.0,
                     "min": 1.0,
                     "max": 60.0,
                     "step": 0.5,
+                }),
+                "low_vram": ("BOOLEAN", {
+                    "default": False,
+                    "label_on": "ON (slower)",
+                    "label_off": "OFF (peak VRAM)",
                 }),
                 "cfg_strength": ("FLOAT", {
                     "default": 4.5,
@@ -658,6 +670,7 @@ class ControlFoleyImageToAudio:
         cfg_strength: float,
         steps: int,
         seed: int,
+        low_vram: bool = False,
     ):
         # --- Device setup ---
         if torch.cuda.is_available():
@@ -732,6 +745,7 @@ class ControlFoleyImageToAudio:
             rng=rng,
             cfg_strength=cfg_strength,
             image_input=True,
+            low_vram=low_vram,
         )
 
         audio = audios.float().cpu()[0]

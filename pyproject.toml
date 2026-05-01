@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfyui-controlfoley"
+version = "1.0.0"
+description = "ControlFoley integration for ComfyUI"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "ComfyUI Community" }]
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/xiaomi-research/controlfoley"
+Repository = "https://github.com/user/comfyui-controlfoley"
+Issues = "https://github.com/user/comfyui-controlfoley/issues"
